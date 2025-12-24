@@ -42,8 +42,8 @@ jobs:
       - name: Package / Make (Electron Forge)
         run: npm run make
         env:
-          AGENT_SECRET: ${{ secrets.AGENT_SECRET }} # Inject secret if needed during build (though runtime reads it from env or keychain)
-          # Note: If you code sign, you need certificate secrets here too.
+          AGENT_SECRET: ${{ secrets.AGENT_SECRET }} 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
 
       - name: Release
         uses: softprops/action-gh-release@v1

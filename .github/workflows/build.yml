@@ -14,8 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest]
-        # os: [macos-latest, windows-latest] # Add windows later if needed
+        os: [macos-latest, windows-latest]
 
     steps:
       - name: Check out Git repository
@@ -43,7 +42,7 @@ jobs:
         run: npm run make
         env:
           AGENT_SECRET: ${{ secrets.AGENT_SECRET }} 
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         uses: softprops/action-gh-release@v1

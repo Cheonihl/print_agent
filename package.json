@@ -7,6 +7,8 @@
         "start": "electron .",
         "build": "tsc && cp src/index.html dist/ && cp src/style.css dist/ && cp -r src/print/templates dist/print/ && cp -r src/assets dist/ && sed -i '' '/Object.defineProperty(exports/d' dist/renderer.js",
         "rebuild": "node-gyp rebuild",
+        "build:addon": "node-gyp rebuild",
+        "build:ts": "tsc",
         "test": "echo \"Error: no test specified\" && exit 1",
         "install": "node-gyp rebuild",
         "dist": "npm run build && electron-builder"

@@ -11,6 +11,7 @@
         "build:ts": "tsc",
         "test": "echo \"Error: no test specified\" && exit 1",
         "install": "node-gyp rebuild",
+        "make": "npm run dist",
         "dist": "npm run build && electron-builder"
     },
     "build": {
@@ -37,7 +38,7 @@
             "allowToChangeInstallationDirectory": true
         }
     },
-    "author": "Ribbon",
+    "author": "2001",
     "license": "ISC",
     "dependencies": {
         "bindings": "^1.5.0",

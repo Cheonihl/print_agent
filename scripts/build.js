@@ -36,7 +36,17 @@ function main() {
     copyDir(path.join(srcDir, 'print/templates'), path.join(distDir, 'print/templates'));
     copyDir(path.join(srcDir, 'assets'), path.join(distDir, 'assets'));
 
-    // 3. Fix Renderer (Remove Object.defineProperty(exports...))
+    // 3. Copy Native Addon
+    console.log('Copying native addon...');
+    const addonSrc = path.join(rootDir, 'build/Release/addon.node');
+    const addonDest = path.join(distDir, 'addon.node');
+    if (fs.existsSync(addonSrc)) {
+        fs.copyFileSync(addonSrc, addonDest);
+    } else {
+        console.warn('Warning: Native addon not found at build/Release/addon.node. Skipping copy.');
+    }
+
+    // 4. Fix Renderer (Remove Object.defineProperty(exports...))
     console.log('Fixing renderer.js...');
     const rendererPath = path.join(distDir, 'renderer.js');
     if (fs.existsSync(rendererPath)) {

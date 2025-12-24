@@ -2,7 +2,7 @@ import { app, BrowserWindow, Menu, Tray, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { startServer } from './server';
 // @ts-ignore
-const addon = require('../build/Release/addon');
+const addon = require('./addon.node');
 
 let tray: Tray | null = null;
 let mainWindow: BrowserWindow | null = null;

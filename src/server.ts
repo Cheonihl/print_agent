@@ -5,7 +5,7 @@ import cors from 'cors';
 import { renderTemplate } from './print/render';
 import { verifySignature } from './security';
 // @ts-ignore
-const addon = require('../build/Release/addon');
+const addon = require('./addon.node');
 
 const app = express();
 const PORT = 12345;

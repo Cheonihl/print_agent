@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리본 인쇄 에이전트</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background-color: #e5e5ea;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-running {
+            background-color: #34c759;
+            color: white;
+        }
+
+        #log-container {
+            height: 300px;
+            overflow-y: auto;
+            background-color: #1c1c1e;
+            color: #34c759;
+            font-family: 'Menlo', monospace;
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+        }
+
+        .log-time {
+            color: #8e8e93;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div style="margin-bottom: 2rem;">
+                <!-- SVG Icon for Ribbon could go here -->
+                <h1 style="font-size: 1.2rem;">리본 에이전트</h1>
+                <p>로컬 인쇄 서비스</p>
+            </div>
+
+            <nav style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <button class="btn btn-secondary" style="justify-content: flex-start;">대시보드</button>
+                <!-- Settings button removed as requested -->
+            </nav>
+
+            <div style="margin-top: auto;">
+                <p class="text-sm">v1.0.0</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header Status -->
+            <div class="card flex items-center justify-between">
+                <div>
+                    <h2 class="card-title">서버 상태</h2>
+                    <p>포트: 12345</p>
+                </div>
+                <span id="server-status" class="badge badge-success">실행 중</span>
+            </div>
+
+            <!-- Printer List -->
+            <div class="card">
+                <div class="card-header flex items-center justify-between">
+                    <h2 class="card-title">연결된 프린터</h2>
+                    <button id="refresh-printers" class="btn btn-outline btn-sm"
+                        style="height: 1.75rem; font-size: 0.75rem;">새로고침</button>
+                </div>
+                <ul id="printer-list"
+                    style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <li class="text-sm text-muted-foreground">검색 중...</li>
+                </ul>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="card flex-col" style="flex: 1; display: flex;">
+                <div class="card-header flex items-center justify-between">
+                    <h2 class="card-title">작업 로그</h2>
+                    <div class="flex gap-2">
+                        <button id="clear-logs" class="btn btn-outline btn-sm"
+                            style="height: 1.75rem; font-size: 0.75rem;">지우기</button>
+                        <button id="export-logs" class="btn btn-outline btn-sm"
+                            style="height: 1.75rem; font-size: 0.75rem;">로그 저장</button>
+                    </div>
+                </div>
+                <div id="log-container" class="log-viewer" style="flex: 1;"></div>
+            </div>
+        </main>
+    </div>
+    <script src="./renderer.js"></script>
+</body>
+
+</html>

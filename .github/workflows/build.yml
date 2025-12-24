@@ -1,0 +1,58 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest]
+        # os: [macos-latest, windows-latest] # Add windows later if needed
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # C++ Addon caching usually not needed for simple builds, 
+      # but if compilation takes too long, we can add it.
+      
+      - name: Build C++ Addon
+        run: npm run build:addon
+
+      - name: Compile TypeScript
+        run: npm run build:ts
+
+      - name: Package / Make (Electron Forge)
+        run: npm run make
+        env:
+          AGENT_SECRET: ${{ secrets.AGENT_SECRET }} # Inject secret if needed during build (though runtime reads it from env or keychain)
+          # Note: If you code sign, you need certificate secrets here too.
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            out/**/*.dmg
+            out/**/*.zip
+            dist-package/**/*.dmg
+            dist-package/**/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

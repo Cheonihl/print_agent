@@ -6,6 +6,7 @@ const addon = require('./addon.node');
 
 let tray: Tray | null = null;
 let mainWindow: BrowserWindow | null = null;
+let currentPrinter: string = '';
 
 const ICON_PATH = path.join(__dirname, '../src/assets/icon.png'); // Path for dev, will need adjustment for prod
 
@@ -100,10 +101,68 @@ app.whenReady().then(() => {
     });
 
     // Start Express Server
-    startServer((entry) => {
-        // Forward logs to renderer
-        if (mainWindow) {
-            mainWindow.webContents.send('log-message', entry);
+    startServer(
+        (entry) => {
+            // Forward logs to renderer
+            if (mainWindow) {
+                mainWindow.webContents.send('log-message', entry);
+            }
+        },
+        (image, printerName, width, height) => {
+            // Handle Print Job
+            if (mainWindow) {
+                currentPrinter = printerName;
+                mainWindow.webContents.send('print-job', image, printerName, width, height);
+            }
+        }
+    );
+
+    ipcMain.on('print-ready', async (event, width, height) => {
+        console.log(`Main: Received print-ready signal. Dimensions: ${width}x${height}`);
+        if (mainWindow && currentPrinter) {
+            console.log(`Main: Attempting to print to ${currentPrinter}...`);
+            try {
+                const printOptions: any = {
+                    silent: true,
+                    printBackground: true,
+                    deviceName: currentPrinter,
+                    margins: { marginType: 1 } // No margins to prevent clipping
+                };
+
+                // Apply dimensions if provided
+                if (width && height) {
+                    // Electron uses microns (1mm = 1000 microns)
+                    printOptions.pageSize = {
+                        width: width * 1000,
+                        height: height * 1000
+                    };
+                    console.log(`Main: Applied custom page size: ${width}mm x ${height}mm`);
+                }
+
+                mainWindow.webContents.print(printOptions, (success, errorType) => {
+                    if (!success) {
+                        console.error('Main: Print failed:', errorType);
+                        mainWindow?.webContents.send('log-message', {
+                            timestamp: new Date().toISOString(),
+                            level: 'ERROR',
+                            message: `인쇄 실패: ${errorType}`,
+                            context: 'Main'
+                        });
+                    } else {
+                        console.log('Main: Print initiated successfully.');
+                        mainWindow?.webContents.send('log-message', {
+                            timestamp: new Date().toISOString(),
+                            level: 'INFO',
+                            message: `인쇄 작업 전송 완료 (규격: ${width ? `${width}x${height}mm` : '기본'})`,
+                            context: 'Main'
+                        });
+                    }
+                });
+            } catch (e: any) {
+                console.error('Main: Exception during print:', e);
+            }
+        } else {
+            console.warn('Main: print-ready received but mainWindow or currentPrinter is missing.', { mainWindow: !!mainWindow, currentPrinter });
         }
     });
 
@@ -116,4 +175,3 @@ app.whenReady().then(() => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
 });
-

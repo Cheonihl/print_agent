@@ -13,6 +13,8 @@ declare global {
             onStatusChange: (callback: (status: any) => void) => void;
             getPrinters: () => Promise<string[]>;
             saveLogs: (content: string) => Promise<boolean>;
+            onPrintJob: (callback: (image: string, printer: string, width?: number, height?: number) => void) => void;
+            printReady: (width?: number, height?: number) => void;
         }
     }
 }
@@ -22,6 +24,7 @@ const logContainer = document.getElementById('log-container');
 const btnRefresh = document.getElementById('refresh-printers');
 const btnClear = document.getElementById('clear-logs');
 const btnExport = document.getElementById('export-logs');
+const printImage = document.getElementById('print-image') as HTMLImageElement;
 
 let logs: LogEntry[] = [];
 
@@ -117,6 +120,62 @@ if (btnExport) {
 if (window.electronAPI) {
     window.electronAPI.onLog((entry: LogEntry) => {
         addLogEntry(entry);
+    });
+
+    const previewImage = document.getElementById('preview-image') as HTMLImageElement;
+    const previewPlaceholder = document.getElementById('preview-placeholder');
+
+    window.electronAPI.onPrintJob((image: string, printer: string, width?: number, height?: number) => {
+        addLogEntry({
+            timestamp: new Date().toISOString(),
+            level: 'INFO',
+            message: `이미지 인쇄 준비 중... (${printer}) [규격: ${width || 'Auto'}x${height || 'Auto'}mm]`,
+            context: 'Renderer'
+        });
+
+        // Update Preview
+        if (previewImage && previewPlaceholder) {
+            previewImage.src = image;
+            previewImage.style.display = 'block';
+            previewPlaceholder.style.display = 'none';
+        }
+
+        if (printImage) {
+            // explicit size for printing
+            if (width) printImage.style.width = `${width}mm`;
+            if (height) printImage.style.height = `${height}mm`;
+
+            console.log('Renderer: Setting image src...');
+            printImage.src = image;
+            // Wait for image to load before printing
+            printImage.onload = () => {
+                console.log('Renderer: Image loaded. Sending print-ready...');
+                addLogEntry({
+                    timestamp: new Date().toISOString(),
+                    level: 'INFO',
+                    message: `이미지 로드 완료. 인쇄 요청 전송.`,
+                    context: 'Renderer'
+                });
+                window.electronAPI.printReady(width, height);
+            };
+            printImage.onerror = (e) => {
+                console.error('Renderer: Image load error', e);
+                addLogEntry({
+                    timestamp: new Date().toISOString(),
+                    level: 'ERROR',
+                    message: `이미지 로드 실패`,
+                    context: 'Renderer'
+                });
+            };
+        } else {
+            console.error('Renderer: #print-image element not found!');
+            addLogEntry({
+                timestamp: new Date().toISOString(),
+                level: 'ERROR',
+                message: `#print-image 요소를 찾을 수 없음`,
+                context: 'Renderer'
+            });
+        }
     });
 
     // Initial load

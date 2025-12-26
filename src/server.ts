@@ -12,7 +12,7 @@ const PORT = 12345;
 const AGENT_SECRET = process.env.AGENT_SECRET || 'dev_secret'; // In production, generate/load securely
 
 app.use(cors());
-app.use(bodyParser.raw({ type: 'application/json' })); // raw body for signature verification
+app.use(bodyParser.raw({ type: 'application/json', limit: '50mb' })); // raw body for signature verification
 
 // Callback type for logging
 import { LogEntry } from './types';
@@ -31,6 +31,10 @@ function log(level: 'INFO' | 'ERROR' | 'WARN', message: string, context?: string
     if (logCallback) logCallback(entry);
 }
 
+
+type PrintCallback = (image: string, printerName: string, width?: number, height?: number) => void;
+let printCallback: PrintCallback | null = null;
+
 app.post('/print', async (req, res) => {
     const signature = req.headers['x-print-signature'] as string;
     const rawBody = req.body; // Buffer because of bodyParser.raw
@@ -45,7 +49,14 @@ app.post('/print', async (req, res) => {
 
     try {
         const jsonBody = JSON.parse(rawBody.toString());
-        const { printerName, templateType, templateName, data, copies } = jsonBody;
+        const { printerName, image, templateType, templateName, data, width, height } = jsonBody;
+
+        if (image && printCallback) {
+            log('INFO', `Received image print job for ${printerName} (${width}x${height}mm)`, printerName);
+            printCallback(image, printerName, width, height);
+            res.status(200).json({ success: true, message: 'Image print job forwarded to renderer' });
+            return;
+        }
 
         log('INFO', `Received print job: ${templateType}/${templateName}`, printerName);
 
@@ -74,8 +85,9 @@ app.get('/printers', (req, res) => {
     }
 });
 
-export function startServer(onLog?: LogCallback) {
+export function startServer(onLog?: LogCallback, onPrint?: PrintCallback) {
     if (onLog) logCallback = onLog;
+    if (onPrint) printCallback = onPrint;
 
     app.listen(PORT, () => {
         log('INFO', `Print Agent Server running on port ${PORT}`, 'System');
